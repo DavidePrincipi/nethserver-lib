@@ -30,7 +30,12 @@ sub TIEHASH {
         # Remove any path prefix from the module name. This is 
         # almost equivalent to basename():            
         $parts[0] = (split(m|/|, $parts[0]))[-1];
+    } elsif($parts[0] =~ m|^/var/lib/nethserver/db/|) {
+        # Simple database name is bound to Esdb via DBus
+        $parts[0] = (split(m|/|, $parts[0]))[-1];
+        unshift(@parts, 'NethServer::Database::Esdb');
     } else {
+        # Absolute paths are bound to traditional database
         unshift(@parts, 'esmith::config');
     }
 
