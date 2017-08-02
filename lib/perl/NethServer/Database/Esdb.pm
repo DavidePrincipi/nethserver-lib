@@ -22,18 +22,20 @@ package NethServer::Database::Esdb;
 
 use strict;
 use Net::DBus;
+use JSON;
 
 sub TIEHASH
 {
     my $class = shift;
     my $database = shift;
     my $bus = Net::DBus->system();
-    my $service = $bus->get_service("org.nethserver.toweld1");
-    my $object = $service->get_object('/org/nethserver/toweld1/Esdb/' . $database);
+    my $service = $bus->get_service("org.nethserver.Toweld1");
+    my $object = $service->get_object('/org/nethserver/Toweld1/' . $database);
     my $self = {
         'bus' => $bus,
         'service' => $service,
         'object' => $object,
+        'cache' => JSON::decode_json($object->DbAsLegacyFormat()),
         'iterator' => []
     };
     bless $self, $class;
@@ -46,7 +48,7 @@ sub FETCH
     my $self = shift;
     my $key = shift;
 
-    return $self->{'object'}->GetRaw($key);
+    return $self->{'cache'}->{$key};
 }
 
 
@@ -72,15 +74,14 @@ sub EXISTS
 {
     my $self = shift;
     my $key = shift;
-    my $value = $self->{'object'}->GetRaw($key);
-    return ($value ? 1 : 0)
+    return exists $self->{'cache'}->{$key};
 }
 
 
 sub FIRSTKEY
 {
     my $self = shift;
-    $self->{'iterator'} = $self->{'object'}->Keys();
+    $self->{'iterator'} = [keys %{$self->{'cache'}}];
     return $self->{'iterator'}->[0];
 }
 
