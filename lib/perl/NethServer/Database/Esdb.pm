@@ -54,19 +54,29 @@ sub FETCH
 
 sub STORE
 {
-    
+    my $self = shift;
+    my $key = shift;
+    my $value = shift;
+    $self->{'cache'}->{$key} = $value;
+    $self->{'object'}->DbSetLegacy($key, $value);
 }
 
 
 sub DELETE
 {
-        
+    my $self = shift;
+    my $key = shift;
+    $self->{'object'}->DbDelete($key);
+    delete $self->{'cache'}->{$key};
 }
 
 
 sub CLEAR
 {
-        
+    my $self = shift;
+    foreach my $key (keys %{$self->{'cache'}}) {
+        $self->DELETE($key);
+    }
 }
 
 
